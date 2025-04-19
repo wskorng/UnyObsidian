@@ -2,119 +2,68 @@
 RNN = Recurrent Neural Network
 
 ## RNNの計算グラフ
-
 ```mermaid
-graph BT
-    direction LR
-    param["パラメーターW"]
-    h0["初期状態"] --> |"s<sub>0</sub>"| h1["h(W)"]
+flowchart TD
 
-    subgraph Time1
-        direction TB
-        x1["説明変数x<sub>1</sub>"] --> |"x1"| h1
-        h1 --> |"z<sub>1</sub>"| sub1
-        sub1["目的変数t1とのsub"] --> |"z1-t1"| sq1["square"]
-        sq1 --> |"(z1-t1)²"| L1["sum"]
-    end
+  %% 損失ノード
+  subgraph .
+    sum -->|L| loss
+  end
+  
+  sigma0 -->|h0| mula1
 
-    subgraph Time2
-        direction TB
-        h2["h(W)"]
-        x2["説明変数x<sub>2</sub>"] --> |"x2"| h2
-        h1 --> |"s<sub>1</sub>"| h2
-        h2 --> |"z<sub>2</sub>"| sub2
-        sub2["目的変数t2とのsub"] --> |"z2-t2"| sq2["square"]
-        sq2 --> |"(z2-t2)²"| L2["sum"]
-    end
+  %% Layer1
+  subgraph Layer1
+    ParamW1["パラメータW"] -->|w| mula1
+    mula1 -->|Wh0| adda1((add))
+    X1["説明変数x1"] -->|x1| mulb1((mul))
+    ParamU1["パラメータU"] -->|U| mulb1
+    mulb1 -->|Ux1| adda1
+    adda1 -->|Wh0+Ux1| sigma1((σ))
+    ParamV1["パラメータV"] -->|V| mulc1
+    sigma1 -->|h1| mulc1((mul))
+    mulc1 -->|y1| sub1((sub))
+    sub1 --> sq1(square)
+    sq1 --> scan1(scan)
+    scan1 -->|L1| sum
+  end
 
-    subgraph Time3
-        direction TB
-        h3["h(W)"]
-        x3["説明変数x<sub>3</sub>"] --> |"x3"| h3
-        h2 --> |"s<sub>2</sub>"| h3
-        h3 --> |"z<sub>3</sub>"| sub3
-        sub3["目的変数t3とのsub"] --> |"z3-t3"| sq3["square"]
-        sq3 --> |"(z3-t3)²"| L3["sum"]
-    end
+  sigma1 -->|h1| mula2
 
-    subgraph Time4
-        direction TB
-        h4["h(W)"]
-        x4["説明変数x<sub>4</sub>"] --> |"x4"| h4
-        h3 --> |"s<sub>3</sub>"| h4
-        h4 --> |"z<sub>4</sub>"| sub4
-        sub4["目的変数t4とのsub"] --> |"z4-t4"| sq4["square"]
-        sq4 --> |"(z4-t4)²"| L4["sum"]
-    end
+  %% Layer2
+  subgraph Layer2
+    ParamW2["パラメータW"] -->|w| mula2
+    mula2 -->|Wh1| adda2((add))
+    X2["説明変数x2"] -->|x2| mulb2((mul))
+    ParamU2["パラメータU"] -->|U| mulb2
+    mulb2 -->|Ux2| adda2
+    adda2 -->|Wh1+Ux2| sigma2((σ))
+    ParamV2["パラメータV"] -->|V| mulc2
+    sigma2 -->|h2| mulc2((mul))
+    mulc2 -->|y2| sub2((sub))
+    sub2 --> sq2(square)
+    sq2 --> scan2(scan)
+    scan2 -->|L2| sum
+  end
 
-    subgraph Next
-        h4 --> |"s<sub>4</sub>"| h5["..."]
-    end
-
-    param --> |"W"| h1
-    param --> |"W"| h2
-    param --> |"W"| h3
-    param --> |"W"| h4
-
-    L1 --> |"L<sub>1</sub>"| sum["sum"]
-    L2 --> |"L<sub>2</sub>"| sum
-    L3 --> |"L<sub>3</sub>"| sum
-    L4 --> |"L<sub>4</sub>"| sum
-    sum --> |"L=ΣL<sub>t</sub>"| loss["損失"]
-
-    %% スタイル設定
-    classDef input fill:#f9f,stroke:#333,stroke-width:2px
-    classDef state fill:#bbf,stroke:#333,stroke-width:2px
-    classDef output fill:#bfb,stroke:#333,stroke-width:2px
-    classDef target fill:#fbb,stroke:#333,stroke-width:2px
-    class x1,x2,x3,x4 input
-    class h0,h1,h2,h3,h4,h5 state
-    class z1,z2,z3,z4 output
-    class t1,t2,t3,t4 target
-```
-
-## これに自動微分を書き込むと
-
-```mermaid
-graph BT
-    param["パラメーターW"] --> |"W"| h1["h(W)"]
-    h1["h(W)"] --> |"1"| param
-    h1 --> |"s<sub>1</sub>"| h2
-    h2 --> |"1"| h1
-
-    param --> |"W"| h2
-    h2 --> |"1"| param
-
-    subgraph Time2
-        direction TB
-        h2["h(W)"]
-        x2["説明変数x<sub>2</sub>"] --> |"x2"| h2
-        h2 --> |"1"| x2
-        h2 --> |"z<sub>2</sub>"| sub2
-        sub2 --> |"1"| h2
-        sub2["目的変数t2とのsub"] --> |"z2-t2"| sq2["square"]
-        sq2 --> |"1"| sub2
-        sq2 --> |"(z2-t2)²"| L2["sum"]
-        L2 --> |"2(z2-t2)"| sq2
-    end
-
-    h2 --> |"s<sub>2</sub>"| h3
-    h3 --> |"1"| h2
+  sigma2 -->|h2| mula3
+  
+  %% Layer3
+  subgraph Layer3
+    ParamW3["パラメータW"] -->|w| mula3
+    mula3 -->|Wh2| adda3((add))
+    X3["説明変数x3"] -->|x3| mulb3((mul))
+    ParamU3["パラメータU"] -->|U| mulb3
+    mulb3 -->|Ux3| adda3
+    adda3 -->|Wh2+Ux3| sigma3((σ))
+    ParamV3["パラメータV"] -->|V| mulc3
+    sigma3 -->|h3| mulc3((mul))
+    mulc3 -->|y3| sub3((sub))
+    sub3 --> sq3(square)
+    sq3 --> scan3(scan)
+    scan3 -->|L3| sum
+  end
 
 
 
-    L2 --> |"L<sub>2</sub>"| sum["sum"]
-    sum --> |"1"| L2
-    sum --> |"L=ΣL<sub>t</sub>"| loss["損失"]
-    loss --> |"1"| sum
-
-    %% スタイル設定
-    classDef input fill:#f9f,stroke:#333,stroke-width:2px
-    classDef state fill:#bbf,stroke:#333,stroke-width:2px
-    classDef output fill:#bfb,stroke:#333,stroke-width:2px
-    classDef target fill:#fbb,stroke:#333,stroke-width:2px
-    class x1,x2,x3,x4 input
-    class h0,h1,h2,h3,h4,h5 state
-    class z1,z2,z3,z4 output
-    class t1,t2,t3,t4 target
 ```
