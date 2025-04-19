@@ -1,10 +1,7 @@
-## 
-RNN = Recurrent Neural Network
-
-## RNNの計算グラフ## 
-RNN = Recurrent Neural Network
-
 ## RNNの計算グラフ
+RNN = Recurrent Neural Network
+最も簡単な例のRNNの計算グラフを示します
+
 ```mermaid
 flowchart TD
 
@@ -17,7 +14,7 @@ flowchart TD
 
   %% Layer1
   subgraph Layer1
-    ParamW1["パラメータW"] -->|w| mula1((mul))
+    ParamW1["パラメータW"] -->|W| mula1((mul))
     mula1 -->|Wh0| adda1((add))
     X1["説明変数x1"] -->|x1| mulb1((mul))
     ParamU1["パラメータU"] -->|U| mulb1
@@ -35,7 +32,7 @@ flowchart TD
 
   %% Layer2
   subgraph Layer2
-    ParamW2["パラメータW"] -->|w| mula2((mul))
+    ParamW2["パラメータW"] -->|W| mula2((mul))
     mula2 -->|Wh1| adda2((add))
     X2["説明変数x2"] -->|x2| mulb2((mul))
     ParamU2["パラメータU"] -->|U| mulb2
@@ -53,7 +50,7 @@ flowchart TD
 
   %% Layer3
   subgraph Layer3
-    ParamW3["パラメータW"] -->|w| mula3((mul))
+    ParamW3["パラメータW"] -->|W| mula3((mul))
     mula3 -->|Wh2| adda3((add))
     X3["説明変数x3"] -->|x3| mulb3((mul))
     ParamU3["パラメータU"] -->|U| mulb3
@@ -134,9 +131,71 @@ flowchart TD
   end
 
 ```
-だから
-∂L/∂V = 2(y1-t1)⊗h1 + 2(y2-t2)⊗h2 + 2(y3-t3)⊗h3 + ...
-なのはいいとして
-∂L/∂σ1 = 2(y1-t1)@V + 2(y2-t2)@Vσ'2@W + 2(y3-t3)@Vσ'3@Wσ'2@W + ...
-∂L/∂W = (∂L/∂σ1)⊗h0 + (∂L/∂σ2)⊗h1 + (∂L/∂σ3)⊗h2 + ...
-∂L/∂U = (∂L/∂σ1)⊗x1 + (∂L/∂σ2)⊗x2 + (∂L/∂σ3)⊗x3 + ...
+
+## RNNの各パラメータの誤差逆伝播の計算式
+したがって、以下の勾配が得られます：
+
+$$
+\begin{align*}
+\frac{\partial L}{\partial V} &= 2(y_1-t_1)\otimes h_1 + 2(y_2-t_2)\otimes h_2 + 2(y_3-t_3)\otimes h_3 + \cdots \\
+\frac{\partial L}{\partial (Wh_0+Ux_1)} &= 2(y_1-t_1)\circledast V*\sigma'_1 + 2(y_2-t_2)\circledast V*\sigma'_2\circledast W*\sigma'_1 + 2(y_3-t_3)\circledast V*\sigma'_3\circledast W*\sigma'_2\circledast W*\sigma'_1 + \cdots \\
+\frac{\partial L}{\partial W} &= \left(\frac{\partial L}{\partial (Wh_0+Ux_1)}\right)\otimes h_0 + \left(\frac{\partial L}{\partial (Wh_1+Ux_2)}\right)\otimes h_1 + \left(\frac{\partial L}{\partial (Wh_2+Ux_3)}\right)\otimes h_2 + \cdots \\
+\frac{\partial L}{\partial U} &= \left(\frac{\partial L}{\partial (Wh_0+Ux_1)}\right)\otimes x_1 + \left(\frac{\partial L}{\partial (Wh_1+Ux_2)}\right)\otimes x_2 + \left(\frac{\partial L}{\partial (Wh_2+Ux_3)}\right)\otimes x_3 + \cdots
+\end{align*}
+$$
+
+ここで、$\otimes$ は直積を、$*$ はアダマール積を、$\circledast$ は行列積を表します。
+
+大まかに$\sigma'$を$1$とみなして考えると、これがやばいことがわかる。
+というのも$\frac{\partial L}{\partial (Wh_0+Ux_1)}$の第$t$項は$W^t$かかってる。もし$||W||>1$とすると古い項ほど影響が大きくなるので、そんなわけなくて$||W||<1$なんだけど、それはそれで古い項の影響がべき乗で小さくなりすぎる、例えば$||W||\sim0.8$くらいでも$t\sim20$くらいで$||W^t||\sim0.01$となりほぼ覚えてないことになる。(これを別の切り口で言うと勾配消失問題にあたるのかな？)
+これが理由でシンプルなRNNでは10～20項くらいで記憶力の限界になる。
+この問題の原因について、人間の記憶力って短期記憶(脳科学的な短期記憶に等しいとは限らない。言語モデルでいえばさっき書いた主語が男性名詞だから述語の性も男性にしなきゃレベルの短期)はべき乗で減衰していいけど長期記憶はそうじゃないよねってことで開発されたのがLSTM。
+
+
+## RNNセル
+```mermaid
+flowchart TD
+  sigma0(sigma0) -->|h0| mula1
+
+  %% Layer1
+  subgraph Layer1
+    ParamW1["パラメータW"] -->|W| mula1((mul))
+    mula1 -->|Wh0| adda1((add))
+    X1["説明変数x1"] -->|x1| mulb1((mul))
+    ParamU1["パラメータU"] -->|U| mulb1
+    mulb1 -->|Ux1| adda1
+    adda1 -->|Wh0+Ux1| sigma1((σ))
+    sigma1 -->|h1| out1
+  end
+
+  sigma1 -->|h1| mula2((mul))
+```
+の部分をRNNセルといい、
+```mermaid
+flowchart TD
+  gate0((gate σ W U)) -->|h0| gate1
+
+  %% Layer1
+  subgraph Layer1
+    X1["説明変数x1"] -->|x1| gate1((gate σ W U))
+    gate1 -->|h1| out1
+  end
+
+  gate1 -->|h1| gate2((gate σ W U))
+```
+と略します。これの逆伝播グラフは以下のようになります。
+```mermaid
+flowchart TD
+  gate2((gate σ W U)) -->|σ'@W| gate1
+
+  %% Layer1
+  subgraph Layer1
+    gate1((gate σ W U)) -->|σ'@U| X1["説明変数x1"]
+    out1 -->|"...@V"| gate1
+  end
+
+  gate1 -->|σ'@W| gate0((gate σ W U))
+
+```
+
+## LSTMセル
