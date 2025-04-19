@@ -1,0 +1,74 @@
+## 
+RNN = Recurrent Neural Network
+
+## RNNの計算グラフ
+
+```mermaid
+graph BT
+    direction LR
+    param["パラメーターW"]
+    h0["初期状態"] --> |"s<sub>0</sub>"| h1["h(W)"]
+
+    subgraph Time1
+        direction TB
+        x1["説明変数x<sub>1</sub>"] --> |"x1"| h1
+        h1 --> |"z<sub>1</sub>"| sub1
+        sub1["目的変数t1とのsub"] --> |"z1-t1"| sq1["square"]
+        sq1 --> |"(z1-t1)²"| L1["sum"]
+    end
+
+    subgraph Time2
+        direction TB
+        h2["h(W)"]
+        x2["説明変数x<sub>2</sub>"] --> |"x2"| h2
+        h1 --> |"s<sub>1</sub>"| h2
+        h2 --> |"z<sub>2</sub>"| sub2
+        sub2["目的変数t2とのsub"] --> |"z2-t2"| sq2["square"]
+        sq2 --> |"(z2-t2)²"| L2["sum"]
+    end
+
+    subgraph Time3
+        direction TB
+        h3["h(W)"]
+        x3["説明変数x<sub>3</sub>"] --> |"x3"| h3
+        h2 --> |"s<sub>2</sub>"| h3
+        h3 --> |"z<sub>3</sub>"| sub3
+        sub3["目的変数t3とのsub"] --> |"z3-t3"| sq3["square"]
+        sq3 --> |"(z3-t3)²"| L3["sum"]
+    end
+
+    subgraph Time4
+        direction TB
+        h4["h(W)"]
+        x4["説明変数x<sub>4</sub>"] --> |"x4"| h4
+        h3 --> |"s<sub>3</sub>"| h4
+        h4 --> |"z<sub>4</sub>"| sub4
+        sub4["目的変数t4とのsub"] --> |"z4-t4"| sq4["square"]
+        sq4 --> |"(z4-t4)²"| L4["sum"]
+    end
+
+    subgraph Next
+        h4 --> |"s<sub>4</sub>"| h5["..."]
+    end
+
+    param --> |"W"| h1
+    param --> |"W"| h2
+    param --> |"W"| h3
+    param --> |"W"| h4
+
+    L1 --> |"L<sub>1</sub>"| sum["sum"]
+    L2 --> |"L<sub>2</sub>"| sum
+    L3 --> |"L<sub>3</sub>"| sum
+    L4 --> |"L<sub>4</sub>"| sum
+    sum --> |"L=ΣL<sub>t</sub>"| loss["損失"]
+
+    %% スタイル設定
+    classDef input fill:#f9f,stroke:#333,stroke-width:2px
+    classDef state fill:#bbf,stroke:#333,stroke-width:2px
+    classDef output fill:#bfb,stroke:#333,stroke-width:2px
+    classDef target fill:#fbb,stroke:#333,stroke-width:2px
+    class x1,x2,x3,x4 input
+    class h0,h1,h2,h3,h4,h5 state
+    class z1,z2,z3,z4 output
+    class t1,t2,t3,t4 target
+```
