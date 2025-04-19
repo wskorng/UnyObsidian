@@ -14,7 +14,7 @@ flowchart TD
 
   %% Layer1
   subgraph Layer1
-    ParamW1["パラメータW"] -->|w| mula1
+    ParamW1["パラメータW"] -->|w| mula1((mul))
     mula1 -->|Wh0| adda1((add))
     X1["説明変数x1"] -->|x1| mulb1((mul))
     ParamU1["パラメータU"] -->|U| mulb1
@@ -23,8 +23,8 @@ flowchart TD
     ParamV1["パラメータV"] -->|V| mulc1
     sigma1 -->|h1| mulc1((mul))
     mulc1 -->|y1| sub1((sub))
-    sub1 --> sq1(square)
-    sq1 --> scan1(scan)
+    sub1 -->|y1-t1| sq1((square))
+    sq1 -->|"(y1-t1)²"| scan1((scan))
     scan1 -->|L1| sum
   end
 
@@ -32,7 +32,7 @@ flowchart TD
 
   %% Layer2
   subgraph Layer2
-    ParamW2["パラメータW"] -->|w| mula2
+    ParamW2["パラメータW"] -->|w| mula2((mul))
     mula2 -->|Wh1| adda2((add))
     X2["説明変数x2"] -->|x2| mulb2((mul))
     ParamU2["パラメータU"] -->|U| mulb2
@@ -41,16 +41,16 @@ flowchart TD
     ParamV2["パラメータV"] -->|V| mulc2
     sigma2 -->|h2| mulc2((mul))
     mulc2 -->|y2| sub2((sub))
-    sub2 --> sq2(square)
-    sq2 --> scan2(scan)
+    sub2 -->|y2-t2| sq2((square))
+    sq2 -->|"(y2-t2)²"| scan2((scan))
     scan2 -->|L2| sum
   end
 
   sigma2 -->|h2| mula3
-  
+
   %% Layer3
   subgraph Layer3
-    ParamW3["パラメータW"] -->|w| mula3
+    ParamW3["パラメータW"] -->|w| mula3((mul))
     mula3 -->|Wh2| adda3((add))
     X3["説明変数x3"] -->|x3| mulb3((mul))
     ParamU3["パラメータU"] -->|U| mulb3
@@ -59,11 +59,9 @@ flowchart TD
     ParamV3["パラメータV"] -->|V| mulc3
     sigma3 -->|h3| mulc3((mul))
     mulc3 -->|y3| sub3((sub))
-    sub3 --> sq3(square)
-    sq3 --> scan3(scan)
+    sub3 -->|y3-t3| sq3((square))
+    sq3 -->|"(y3-t3)²"| scan3((scan))
     scan3 -->|L3| sum
   end
-
-
 
 ```
